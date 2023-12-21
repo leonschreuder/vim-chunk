@@ -18,7 +18,7 @@ fu! Chunk(...)
   let g:chunkVisibleStart=g:chunksVisible.start
   let g:chunkVisibleEnd=g:chunksVisible.end
 
-  echom "loading initial 3 chunks: " . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . " (of total " . g:chunkFileLines . " lines)"
+  call chunk#log("loading initial 3 chunks: " . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . " (of total " . g:chunkFileLines . " lines)")
 
   " read specified line range using sed
   let readLines = systemlist("sed -n " . g:chunkVisibleStart . "," . g:chunkVisibleEnd . "p " . g:chunkFile)
@@ -36,7 +36,7 @@ fu! ChunkTo(...)
     call chunk#loadFile(a:2)
   endif
   if !exists("g:chunkFile")
-    echom "Error: Please provide a chunk-file"
+    echoerr "Error: Please provide a chunk-file"
   endif
   call chunk#editChunkBuffer()
 
@@ -44,7 +44,7 @@ fu! ChunkTo(...)
   let g:chunkVisibleStart = g:chunksVisible.start
   let g:chunkVisibleEnd = g:chunksVisible.end
 
-  echom "loading 3 chunks from ". g:chunkFile .": " . g:chunksVisible.start . "-" . g:chunksVisible.end . " (of total " . g:chunkFileLines . " lines)"
+  call chunk#log("loading 3 chunks from ". g:chunkFile .": " . g:chunksVisible.start . "-" . g:chunksVisible.end . " (of total " . g:chunkFileLines . " lines)")
 
   " read specified line range using sed
   let readLines = systemlist("sed -n " . g:chunksVisible.start . "," . g:chunksVisible.end . "p " . g:chunkFile)
@@ -67,7 +67,7 @@ fu! ChunkNext()
   let g:chunkVisibleStart=g:chunkVisibleStart + g:chunkSize
   let g:chunkVisibleEnd=nextChunk.end
 
-  echom "loading next chunk " . nextChunk.start . "-" . nextChunk.end . " (" . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . ")"
+  call chunk#log("loading next chunk " . nextChunk.start . "-" . nextChunk.end . " (" . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . ")")
 
   let firstHunk = chunk#firstHunk()
   call deletebufline(bufname(), firstHunk.start, firstHunk.end)
@@ -88,7 +88,7 @@ fu! ChunkPrevious()
   let g:chunkVisibleStart=prevChunk.start
   let g:chunkVisibleEnd=g:chunkVisibleEnd - g:chunkSize
 
-  echom "loading prev chunk " . prevChunk.start . "-" . prevChunk.end . " (" . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . ")"
+  call chunk#log("loading prev chunk " . prevChunk.start . "-" . prevChunk.end . " (" . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . ")")
 
   let removeLinesEnd=line('$') " from end of file
   let removeLinesStart=removeLinesEnd - g:chunkSize + 1
@@ -163,10 +163,7 @@ fu! chunk#editChunkBuffer()
   if getwininfo(win_getid())[0]['quickfix']
     wincmd p " switch to previous window
   endif
-  echom "bufname:" . bufname()
-  if bufname() == "[Vader-workbench]" " quite ugly, but in Vader tests can not manage the bufname for some reason
-    ene
-  elseif bufname() != "current-chunk"
+  if bufname() != "current-chunk"
     if !bufexists("current-chunk")
       ene " edit new
       file current-chunk " rename buffer
@@ -175,7 +172,12 @@ fu! chunk#editChunkBuffer()
       e current-chunk " edit current-chunk buffer
     endif
   endif
-  " call bufload('current-chunk')
+endfu
+
+fu chunk#log(...)
+  if !exists("g:chunkQuiet")
+    echom join(a:000)
+  endif
 endfu
 
 nnoremap ]c :call ChunkNext()<CR>

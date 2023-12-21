@@ -1,9 +1,8 @@
 UTSuite Chunky Tests
 
 function s:Setup()
-  if exists("g:loaded_chunk")
-    unlet! g:loaded_chunk
-  endif
+  unlet! g:loaded_chunk
+  let g:chunkQuiet = 1
 endfunction
 
 function s:Teardown()
@@ -12,7 +11,6 @@ function s:Teardown()
 endfunction
 
 function s:Test_loads_chunks()
-  echom "inside"
   let g:chunkSize="5"
   let tmpfile = tempname()
   call system('seq 1 100 > ' . tmpfile)
