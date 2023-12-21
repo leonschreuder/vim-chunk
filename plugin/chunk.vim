@@ -9,12 +9,10 @@ let g:loaded_chunk = 1
 
 let g:chunkSize="5000" " 3 chunks are displayed at any time
 
-command! -nargs=? Chunk call Chunk('<args>')
+command! -nargs=1 Chunk call Chunk(<q-args>)
 fu! Chunk(...)
-  let g:chunkFile=a:1
-  let g:chunkFileLines=trim(system("wc -l < " . g:chunkFile))
-
-  :enew
+  call chunk#loadFile(a:1)
+  call chunk#editChunkBuffer()
 
   let g:chunksVisible = chunk#big()
   let g:chunkVisibleStart=g:chunksVisible.start
@@ -27,25 +25,33 @@ fu! Chunk(...)
   " add read lines at the end of the file
   call append(line('$'), readLines)
 
-  call deletebufline(bufname(), 1)
+  call deletebufline(bufname(), 1) " because of the new buffer, the first line is empty, delete it
 endfu
 
 " loads 3 chunks with the specified line number in the middle chunk
-command! -nargs=? ChunkTo call ChunkTo('<args>')
+command! -nargs=+ ChunkTo call ChunkTo(<f-args>)
 fu! ChunkTo(...)
+
+  if exists("a:2")
+    call chunk#loadFile(a:2)
+  endif
+  if !exists("g:chunkFile")
+    echom "Error: Please provide a chunk-file"
+  endif
+  call chunk#editChunkBuffer()
+
   let g:chunksVisible = chunk#big(a:1)
   let g:chunkVisibleStart = g:chunksVisible.start
   let g:chunkVisibleEnd = g:chunksVisible.end
 
-  echom "loading 3 chunks from ". a:1 .": " . g:chunksVisible.start . "-" . g:chunksVisible.end . " (of total " . g:chunkFileLines . " lines)"
+  echom "loading 3 chunks from ". g:chunkFile .": " . g:chunksVisible.start . "-" . g:chunksVisible.end . " (of total " . g:chunkFileLines . " lines)"
 
   " read specified line range using sed
   let readLines = systemlist("sed -n " . g:chunksVisible.start . "," . g:chunksVisible.end . "p " . g:chunkFile)
-  " add read lines at the end of the file
+  :1,$d " delete all lines in buffer first
+  " add new lines at the end of the file
   call append(line('$'), readLines)
-  let removeLinesStart=1 " from beginning of file
-  let removeLinesEnd=removeLinesStart - 1 + g:chunkSize * 3
-  call deletebufline(bufname(), removeLinesStart, removeLinesEnd)
+  call deletebufline(bufname(), 1) " because of the new buffer, the first line is empty, delete it
 endfu
 
 command! ChunkNext call ChunkNext()
@@ -93,6 +99,23 @@ fu! ChunkPrevious()
   call append(0, readLines)
 endfu
 
+
+" can be called when in the quickfix window to open the line under the cursor
+fu! LoadChunkFromQuickfix()
+  let line = getline('.')
+  let result = split(line, '|')
+  let file=result[0]
+  let line = result[1]
+  call ChunkTo(line, file)
+endfu
+
+
+
+fu! chunk#loadFile(file)
+  let g:chunkFile=a:file
+  let g:chunkFileLines=trim(system("wc -l < " . g:chunkFile))
+endfu
+
 fu! chunk#previous(visibleStart)
   let prevChunkEnd=a:visibleStart - 1
   let prevChunkStart=prevChunkEnd - g:chunkSize + 1
@@ -135,6 +158,25 @@ fu! chunk#lastHunk()
   return #{start: 1, end: g:chunkSize}
 endfu
 
+" opens a special chunk buffer. Creates it if it doesn't exist yet.
+fu! chunk#editChunkBuffer()
+  if getwininfo(win_getid())[0]['quickfix']
+    wincmd p " switch to previous window
+  endif
+  echom "bufname:" . bufname()
+  if bufname() == "[Vader-workbench]" " quite ugly, but in Vader tests can not manage the bufname for some reason
+    ene
+  elseif bufname() != "current-chunk"
+    if !bufexists("current-chunk")
+      ene " edit new
+      file current-chunk " rename buffer
+      set buftype=nofile
+    else
+      e current-chunk " edit current-chunk buffer
+    endif
+  endif
+  " call bufload('current-chunk')
+endfu
 
 nnoremap ]c :call ChunkNext()<CR>
 nnoremap [c :call ChunkPrevious()<CR>

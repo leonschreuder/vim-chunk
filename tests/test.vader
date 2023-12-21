@@ -115,8 +115,7 @@ Execute (load chunk of speicified line number):
   let g:chunkSize="5"
   let tmpfile = tempname()
   call system('seq 1 100 > ' . tmpfile)
-  call Chunk(tmpfile)
-  call ChunkTo('50')
+  call ChunkTo('50', tmpfile)
 
 Expect:
   45
@@ -140,10 +139,9 @@ Execute (load chunk of speicified line number when is in first chunk):
   let tmpfile = tempname()
   call system('seq 1 100 > ' . tmpfile)
   call Chunk(tmpfile)
-  call ChunkTo('3')
+  call ChunkTo('7') " empties the buffer and starts at 2 (7-chunkSize)
 
 Expect:
-  1
   2
   3
   4
@@ -158,3 +156,4 @@ Expect:
   13
   14
   15
+  16
