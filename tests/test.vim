@@ -1,20 +1,24 @@
+UTSuite Chunky Tests
 
-Before:
-  unlet! g:loaded_chunk
+function s:Setup()
+  if exists("g:loaded_chunk")
+    unlet! g:loaded_chunk
+  endif
+endfunction
 
-" After:
-"   if bufname() == ""
-"     bd!
-"   endif
+function s:Teardown()
+  :b# " switch back to previous buffer
+  :bdelete! current-chunk " delete custom buffer
+endfunction
 
-# Test case
-Execute (load chunks):
+function s:Test_loads_chunks()
+  echom "inside"
   let g:chunkSize="5"
   let tmpfile = tempname()
   call system('seq 1 100 > ' . tmpfile)
   call Chunk(tmpfile)
 
-Expect:
+  AssertBufferMatch << trim EOF
   1
   2
   3
@@ -30,16 +34,18 @@ Expect:
   13
   14
   15
+  EOF
+endfunction
 
-# Test case
-Execute (load next chunk):
+
+function s:Test_loads_next_chunk()
   let g:chunkSize="5"
   let tmpfile = tempname()
   call system('seq 1 100 > ' . tmpfile)
   call Chunk(tmpfile)
   call ChunkNext()
 
-Expect:
+  AssertBufferMatch << trim EOF
   6
   7
   8
@@ -55,9 +61,12 @@ Expect:
   18
   19
   20
+  EOF
+endfunction
 
-# Test case
-Execute (load previous chunk):
+
+
+function s:Test_loads_previous_chunk()
   let g:chunkSize="5"
   let tmpfile = tempname()
   call system('seq 1 100 > ' . tmpfile)
@@ -65,7 +74,7 @@ Execute (load previous chunk):
   call ChunkNext()
   call ChunkPrevious()
 
-Expect:
+  AssertBufferMatch << trim EOF
   1
   2
   3
@@ -81,9 +90,11 @@ Expect:
   13
   14
   15
+  EOF
+endfunction
 
-# Test case
-Execute (jumping around chunks should not be a problem):
+
+function s:Test_jumping_around_chunks_should_not_be_a_problem()
   let g:chunkSize="5"
   let tmpfile = tempname()
   call system('seq 1 100 > ' . tmpfile)
@@ -94,7 +105,7 @@ Execute (jumping around chunks should not be a problem):
   call ChunkNext()
   call ChunkPrevious()
 
-Expect:
+  AssertBufferMatch << trim EOF
   6
   7
   8
@@ -110,14 +121,16 @@ Expect:
   18
   19
   20
+  EOF
+endfunction
 
-Execute (load chunk of speicified line number):
+function s:Test_loads_chunk_with_line_number()
   let g:chunkSize="5"
   let tmpfile = tempname()
   call system('seq 1 100 > ' . tmpfile)
   call ChunkTo('50', tmpfile)
 
-Expect:
+  AssertBufferMatch << trim EOF
   45
   46
   47
@@ -133,15 +146,17 @@ Expect:
   57
   58
   59
+  EOF
+endfunction
 
-Execute (load chunk of speicified line number when is in first chunk):
+function s:Test_loads_chunk_with_line_number_when_in_first_chunk()
   let g:chunkSize="5"
   let tmpfile = tempname()
   call system('seq 1 100 > ' . tmpfile)
   call Chunk(tmpfile)
   call ChunkTo('7') " empties the buffer and starts at 2 (7-chunkSize)
 
-Expect:
+  AssertBufferMatch << trim EOF
   2
   3
   4
@@ -157,3 +172,5 @@ Expect:
   14
   15
   16
+  EOF
+endfunction
