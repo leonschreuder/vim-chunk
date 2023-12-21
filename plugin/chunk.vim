@@ -7,7 +7,7 @@ if exists("g:loaded_chunk")
 endif
 let g:loaded_chunk = 1
 
-let g:chunkSize="1000" " remember 3 chunks are displayed at a time
+let g:chunkSize="5000" " 3 chunks are displayed at any time
 
 command! -nargs=? Chunk call Chunk('<args>')
 fu! Chunk(...)
@@ -30,6 +30,7 @@ fu! Chunk(...)
   call deletebufline(bufname(), 1)
 endfu
 
+" loads 3 chunks with the specified line number in the middle chunk
 command! -nargs=? ChunkTo call ChunkTo('<args>')
 fu! ChunkTo(...)
   let g:chunksVisible = chunk#big(a:1)
@@ -102,8 +103,12 @@ fu! chunk#previous(visibleStart)
   return #{start: prevChunkStart, end: prevChunkEnd}
 endfu
 
+" Returns a big chunk. Which is 3 chunks, the middelest starting at the
+" provided line number, then one chunk before and one after that.
+" Use this to fill the initial screen.
 fu! chunk#big(start = 1)
-  let l:start=a:start
+  let prevChunk = chunk#previous(a:start)
+  let l:start=prevChunk.start
   let l:end=l:start - 1 + ( g:chunkSize * 3 )
   return #{start: l:start, end: l:end}
 endfu
