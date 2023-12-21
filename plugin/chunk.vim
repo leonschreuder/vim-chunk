@@ -16,8 +16,9 @@ fu! Chunk(...)
 
   :enew
 
-  let g:chunkVisibleStart="1"
-  let g:chunkVisibleEnd=g:chunkVisibleStart - 1 + ( g:chunkSize * 3 )
+  let g:chunksVisible = chunk#big()
+  let g:chunkVisibleStart=g:chunksVisible.start
+  let g:chunkVisibleEnd=g:chunksVisible.end
 
   echom "loading initial 3 chunks: " . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . " (of total " . g:chunkFileLines . " lines)"
 
@@ -29,6 +30,23 @@ fu! Chunk(...)
   call deletebufline(bufname(), 1)
 endfu
 
+command! -nargs=? ChunkTo call ChunkTo('<args>')
+fu! ChunkTo(...)
+  let g:chunksVisible = chunk#big(a:1)
+  let g:chunkVisibleStart = g:chunksVisible.start
+  let g:chunkVisibleEnd = g:chunksVisible.end
+
+  echom "loading 3 chunks from ". a:1 .": " . g:chunksVisible.start . "-" . g:chunksVisible.end . " (of total " . g:chunkFileLines . " lines)"
+
+  " read specified line range using sed
+  let readLines = systemlist("sed -n " . g:chunksVisible.start . "," . g:chunksVisible.end . "p " . g:chunkFile)
+  " add read lines at the end of the file
+  call append(line('$'), readLines)
+  let removeLinesStart=1 " from beginning of file
+  let removeLinesEnd=removeLinesStart - 1 + g:chunkSize * 3
+  call deletebufline(bufname(), removeLinesStart, removeLinesEnd)
+endfu
+
 command! ChunkNext call ChunkNext()
 fu! ChunkNext()
   if g:chunkVisibleEnd >= g:chunkFileLines
@@ -36,22 +54,18 @@ fu! ChunkNext()
     return
   endif
 
-  let nextChunkStart=g:chunkVisibleEnd + 1
-  let nextChunkEnd=g:chunkVisibleEnd + g:chunkSize
-  if nextChunkEnd >= g:chunkFileLines
-    let nextChunkEnd = g:chunkFileLines 
-  endif
+  let nextChunk = chunk#next(g:chunkVisibleEnd)
 
+  let g:chunksVisible = #{start: g:chunksVisible.start + g:chunkSize, end: nextChunk.end}
   let g:chunkVisibleStart=g:chunkVisibleStart + g:chunkSize
-  let g:chunkVisibleEnd=nextChunkEnd
+  let g:chunkVisibleEnd=nextChunk.end
 
-  echom "loading next chunk " . nextChunkStart . "-" . nextChunkEnd . " (" . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . ")"
+  echom "loading next chunk " . nextChunk.start . "-" . nextChunk.end . " (" . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . ")"
 
-  let removeLinesStart=1 " from beginning of file
-  let removeLinesEnd=removeLinesStart - 1 + g:chunkSize
-  call deletebufline(bufname(), removeLinesStart, removeLinesEnd)
+  let firstHunk = chunk#firstHunk()
+  call deletebufline(bufname(), firstHunk.start, firstHunk.end)
   " read specified line range using sed
-  let readLines = systemlist("sed -n " . nextChunkStart . "," . nextChunkEnd . "p " . g:chunkFile)
+  let readLines = systemlist("sed -n " . nextChunk.start . "," . nextChunk.end . "p " . g:chunkFile)
   " add read lines at the end of the file
   call append(line('$'), readLines)
 endfu
@@ -62,22 +76,60 @@ fu! ChunkPrevious()
     echom "Already at start of file."
     return
   endif
-  let prevChunkEnd=g:chunkVisibleStart - 1
-  let prevChunkStart=prevChunkEnd - g:chunkSize + 1
+  let prevChunk = chunk#previous(g:chunkVisibleStart)
 
-  let g:chunkVisibleStart=prevChunkStart
+  let g:chunkVisibleStart=prevChunk.start
   let g:chunkVisibleEnd=g:chunkVisibleEnd - g:chunkSize
 
-  echom "loading prev chunk " . prevChunkStart . "-" . prevChunkEnd . " (" . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . ")"
+  echom "loading prev chunk " . prevChunk.start . "-" . prevChunk.end . " (" . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . ")"
 
   let removeLinesEnd=line('$') " from end of file
   let removeLinesStart=removeLinesEnd - g:chunkSize + 1
   call deletebufline(bufname(), removeLinesStart, removeLinesEnd)
   " read specified line range using sed
-  let readLines = systemlist("sed -n " . prevChunkStart . "," . prevChunkEnd . "p " . g:chunkFile)
+  let readLines = systemlist("sed -n " . prevChunk.start . "," . prevChunk.end . "p " . g:chunkFile)
   " add read lines at the end of the file
   call append(0, readLines)
 endfu
+
+fu! chunk#previous(visibleStart)
+  let prevChunkEnd=a:visibleStart - 1
+  let prevChunkStart=prevChunkEnd - g:chunkSize + 1
+
+  if prevChunkStart <= 1
+    let prevChunkStart = 1
+  endif
+  return #{start: prevChunkStart, end: prevChunkEnd}
+endfu
+
+fu! chunk#big(start = 1)
+  let l:start=a:start
+  let l:end=l:start - 1 + ( g:chunkSize * 3 )
+  return #{start: l:start, end: l:end}
+endfu
+
+fu! chunk#next(visibleEnd)
+  let l:nextChunkStart=a:visibleEnd + 1
+  let l:nextChunkEnd=a:visibleEnd + g:chunkSize
+  if l:nextChunkEnd >= g:chunkFileLines
+    let l:nextChunkEnd = g:chunkFileLines 
+  endif
+  return #{start: l:nextChunkStart, end: l:nextChunkEnd}
+endfu
+
+" the large file is read in chunks, and displayed in hunks
+"
+" A chunk refers to a a part of the (large) file we are reading parts of
+" A hunk refers to the portion of the visible lines in the buffer
+
+fu! chunk#firstHunk()
+  return #{start: 1, end: g:chunkSize}
+endfu
+
+fu! chunk#lastHunk()
+  return #{start: 1, end: g:chunkSize}
+endfu
+
 
 nnoremap ]c :call ChunkNext()<CR>
 nnoremap [c :call ChunkPrevious()<CR>

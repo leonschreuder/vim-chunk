@@ -110,3 +110,27 @@ Expect:
   18
   19
   20
+
+Execute (load chunk of speicified line number):
+  let g:chunkSize="5"
+  let tmpfile = tempname()
+  call system('seq 1 100 > ' . tmpfile)
+  call Chunk(tmpfile)
+  call ChunkTo('50')
+
+Expect:
+  50
+  51
+  52
+  53
+  54
+  55
+  56
+  57
+  58
+  59
+  60
+  61
+  62
+  63
+  64
