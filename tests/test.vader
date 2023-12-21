@@ -1,0 +1,112 @@
+
+Before:
+  unlet! g:loaded_chunk
+
+" After:
+"   if bufname() == ""
+"     bd!
+"   endif
+
+# Test case
+Execute (load chunks):
+  let g:chunkSize="5"
+  let tmpfile = tempname()
+  call system('seq 1 100 > ' . tmpfile)
+  call Chunk(tmpfile)
+
+Expect:
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+  10
+  11
+  12
+  13
+  14
+  15
+
+# Test case
+Execute (load next chunk):
+  let g:chunkSize="5"
+  let tmpfile = tempname()
+  call system('seq 1 100 > ' . tmpfile)
+  call Chunk(tmpfile)
+  call ChunkNext()
+
+Expect:
+  6
+  7
+  8
+  9
+  10
+  11
+  12
+  13
+  14
+  15
+  16
+  17
+  18
+  19
+  20
+
+# Test case
+Execute (load previous chunk):
+  let g:chunkSize="5"
+  let tmpfile = tempname()
+  call system('seq 1 100 > ' . tmpfile)
+  call Chunk(tmpfile)
+  call ChunkNext()
+  call ChunkPrevious()
+
+Expect:
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+  10
+  11
+  12
+  13
+  14
+  15
+
+# Test case
+Execute (jumping around chunks should not be a problem):
+  let g:chunkSize="5"
+  let tmpfile = tempname()
+  call system('seq 1 100 > ' . tmpfile)
+  call Chunk(tmpfile)
+  call ChunkNext()
+  call ChunkNext()
+  call ChunkPrevious()
+  call ChunkNext()
+  call ChunkPrevious()
+
+Expect:
+  6
+  7
+  8
+  9
+  10
+  11
+  12
+  13
+  14
+  15
+  16
+  17
+  18
+  19
+  20

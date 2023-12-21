@@ -13,12 +13,13 @@ command! -nargs=? Chunk call Chunk('<args>')
 fu! Chunk(...)
   let g:chunkFile=a:1
   let g:chunkFileLines=trim(system("wc -l < " . g:chunkFile))
+
   :enew
 
   let g:chunkVisibleStart="1"
   let g:chunkVisibleEnd=g:chunkVisibleStart - 1 + ( g:chunkSize * 3 )
 
-  echom "loading initial 3 chunks: " . g:chunkVisibleStart . "," . g:chunkVisibleEnd . " (" . g:chunkFileLines . " lines)"
+  echom "loading initial 3 chunks: " . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . " (of total " . g:chunkFileLines . " lines)"
 
   " read specified line range using sed
   let readLines = systemlist("sed -n " . g:chunkVisibleStart . "," . g:chunkVisibleEnd . "p " . g:chunkFile)
@@ -44,7 +45,7 @@ fu! ChunkNext()
   let g:chunkVisibleStart=g:chunkVisibleStart + g:chunkSize
   let g:chunkVisibleEnd=nextChunkEnd
 
-  echom "loading next chunk " . nextChunkStart . "," . nextChunkEnd . " (" . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . ")"
+  echom "loading next chunk " . nextChunkStart . "-" . nextChunkEnd . " (" . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . ")"
 
   let removeLinesStart=1 " from beginning of file
   let removeLinesEnd=removeLinesStart - 1 + g:chunkSize
@@ -67,7 +68,7 @@ fu! ChunkPrevious()
   let g:chunkVisibleStart=prevChunkStart
   let g:chunkVisibleEnd=g:chunkVisibleEnd - g:chunkSize
 
-  echom "loading prev chunk " . prevChunkStart . "," . prevChunkEnd . " (" . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . ")"
+  echom "loading prev chunk " . prevChunkStart . "-" . prevChunkEnd . " (" . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . ")"
 
   let removeLinesEnd=line('$') " from end of file
   let removeLinesStart=removeLinesEnd - g:chunkSize + 1
