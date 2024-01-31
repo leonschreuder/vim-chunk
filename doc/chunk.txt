@@ -1,0 +1,69 @@
+*chunk.txt*                 Read huge files, one chunk at a time
+
+Author:  Leon Schreuder <https://github.com/leonschreuder>
+License: MIT
+
+1. Introduction             |chunk-description|
+2. Getting started          |chunk-getting-started|
+3. How-Tos                  |chunk-howtos|   
+4. API Reference            |chunk-api|   
+5. Discussions              |chunk-discussions|   
+
+==============================================================================
+DESCRIPTION                                      *chunk-description*
+
+Vim runs in to problems when you want to read really really big files. the
+whole file gets read into memory which is the first big problem, but then also
+features like syntax highlighting, indentation etc, will make vim even slower.
+
+vim-chunk solves this by allowing you to read big files one chunk at a time.
+
+I built this plugin to help me read huge log files. See also my vim-searchalot
+plugin (link below) to search those log files efectively.
+
+https://github.com/leonschreuder/vim-searchalot
+
+GETTING STARTED                                  *chunk-getting-started*
+
+
+1. Install the plugin using your favorite plugin manager.
+2. Open vim and enter the command: `:Chunk <path/to/file>`
+3. You will now see the first 15000 lines of the file you provided.
+4. Chunks are per default 5000 lines long. Call `:ChunkNext` to view lines
+   5000-20000, and `:ChunkPrevious` to move back one chunk.
+5. Setup mappings
+   This plugin does not automatically set any mappings as that might mess up
+   your current mappings. But here are some I suggest using. Copy them to your
+   vimrc and change the mappings to fit your needs if you want.
+>
+  " move forward and backward through the chunks
+  nnoremap ]c :call ChunkNext()<CR>
+  nnoremap [c :call ChunkPrevious()<CR>
+  " from a quickfix window match, jump into a file using chunk (e.g. after searching)
+  autocmd BufWinEnter quickfix nnoremap <leader>c :call LoadChunkFromQuickfix()<CR>
+<
+HOW-TOS                                          *chunk-howtos*
+
+
+API REFERENCE                                    *chunk-api*
+
+Commands:~
+                                                 *chunk-:Chunk*
+:Chunk {file}                Load 3 chunks of lines from the specified file.
+
+DISCUSSIONS                                      *chunk-discussions*
+
+Why I wrote this plugin and think it is usefull~
+
+Alternatives~
+
+Other plugins (see descussions section for alternatives) try to get around
+this by disabling some slow features, but this only works up to a point.
+
+You can disable some features, or use the
+[BigFile](https://github.com/LunarVim/bigfile.nvim) to do it for you, but
+another way to solve the problem would be to simply not read the entire file in
+at once, but Chunking it.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
