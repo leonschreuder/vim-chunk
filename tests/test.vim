@@ -66,8 +66,6 @@ function s:Test_loads_next_chunk()
   EOF
 endfunction
 
-
-
 function s:Test_loads_previous_chunk()
   let g:chunkSize="5"
   let tmpfile = tempname()
