@@ -176,6 +176,3 @@ fu chunk#log(...)
     echom join(a:000)
   endif
 endfu
-
-nnoremap ]c :call ChunkNext()<CR>
-nnoremap [c :call ChunkPrevious()<CR>
