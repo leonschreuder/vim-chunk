@@ -1,5 +1,9 @@
 UTSuite Chunky Tests
 
+function! s:BeforeAll()
+  source plugin/chunk.vim
+endfunction
+
 function s:Setup()
   unlet! g:loaded_chunk
   let g:chunkQuiet = 1

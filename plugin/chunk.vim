@@ -15,13 +15,11 @@ fu! Chunk(...)
   call chunk#editChunkBuffer()
 
   let g:chunksVisible = chunk#big()
-  let g:chunkVisibleStart=g:chunksVisible.start
-  let g:chunkVisibleEnd=g:chunksVisible.end
 
-  call chunk#log("loading initial 3 chunks: " . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . " (of total " . g:chunkFileLines . " lines)")
+  call chunk#log("loading initial 3 chunks: " . g:chunksVisible.start . "-" . g:chunksVisible.end . " (of total " . g:chunkFileLines . " lines)")
 
   " read specified line range using sed
-  let readLines = systemlist("sed -n " . g:chunkVisibleStart . "," . g:chunkVisibleEnd . "p " . g:chunkFile)
+  let readLines = systemlist("sed -n " . g:chunksVisible.start . "," . g:chunksVisible.end . "p " . g:chunkFile)
   " add read lines at the end of the file
   call append(line('$'), readLines)
 
@@ -41,8 +39,7 @@ fu! ChunkTo(...)
   call chunk#editChunkBuffer()
 
   let g:chunksVisible = chunk#big(a:1)
-  let g:chunkVisibleStart = g:chunksVisible.start
-  let g:chunkVisibleEnd = g:chunksVisible.end
+  let g:chunksVisible.start = g:chunksVisible.start
 
   call chunk#log("loading 3 chunks from ". g:chunkFile .": " . g:chunksVisible.start . "-" . g:chunksVisible.end . " (of total " . g:chunkFileLines . " lines)")
 
@@ -56,18 +53,17 @@ endfu
 
 command! ChunkNext call ChunkNext()
 fu! ChunkNext()
-  if g:chunkVisibleEnd >= g:chunkFileLines
+  if g:chunksVisible.end >= g:chunkFileLines
     echom "Already at end of file."
     return
   endif
 
-  let nextChunk = chunk#next(g:chunkVisibleEnd)
+  let nextChunk = chunk#next(g:chunksVisible.end)
 
-  let g:chunksVisible = #{start: g:chunksVisible.start + g:chunkSize, end: nextChunk.end}
-  let g:chunkVisibleStart=g:chunkVisibleStart + g:chunkSize
-  let g:chunkVisibleEnd=nextChunk.end
+  let g:chunksVisible.start=g:chunksVisible.start + g:chunkSize
+  let g:chunksVisible.end=nextChunk.end
 
-  call chunk#log("loading next chunk " . nextChunk.start . "-" . nextChunk.end . " (" . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . ")")
+  call chunk#log("loading next chunk " . nextChunk.start . "-" . nextChunk.end . " (" . g:chunksVisible.start . "-" . g:chunksVisible.end . ")")
 
   let firstHunk = chunk#firstHunk()
   call deletebufline(bufname(), firstHunk.start, firstHunk.end)
@@ -79,16 +75,16 @@ endfu
 
 command! ChunkPrevious call ChunkPrevious()
 fu! ChunkPrevious()
-  if g:chunkVisibleStart <= 1
+  if g:chunksVisible.start <= 1
     echom "Already at start of file."
     return
   endif
-  let prevChunk = chunk#previous(g:chunkVisibleStart)
+  let prevChunk = chunk#previous(g:chunksVisible.start)
 
-  let g:chunkVisibleStart=prevChunk.start
-  let g:chunkVisibleEnd=g:chunkVisibleEnd - g:chunkSize
+  let g:chunksVisible.start=prevChunk.start
+  let g:chunksVisible.end=g:chunksVisible.end - g:chunkSize
 
-  call chunk#log("loading prev chunk " . prevChunk.start . "-" . prevChunk.end . " (" . g:chunkVisibleStart . "-" . g:chunkVisibleEnd . ")")
+  call chunk#log("loading prev chunk " . prevChunk.start . "-" . prevChunk.end . " (" . g:chunksVisible.start . "-" . g:chunksVisible.end . ")")
 
   let removeLinesEnd=line('$') " from end of file
   let removeLinesStart=removeLinesEnd - g:chunkSize + 1
