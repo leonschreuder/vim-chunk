@@ -124,6 +124,59 @@ function s:Test_jumping_around_chunks_should_not_be_a_problem()
   EOF
 endfunction
 
+function s:Test_loads_last_chunk()
+  let g:chunkSize="5"
+  let tmpfile = tempname()
+  call system('seq 1 100 > ' . tmpfile)
+  call Chunk(tmpfile)
+  call ChunkLast()
+
+  AssertBufferMatch << trim EOF
+  86
+  87
+  88
+  89
+  90
+  91
+  92
+  93
+  94
+  95
+  96
+  97
+  98
+  99
+  100
+  EOF
+endfunction
+
+function s:Test_loads_first_chunk()
+  let g:chunkSize="5"
+  let tmpfile = tempname()
+  call system('seq 1 100 > ' . tmpfile)
+  call Chunk(tmpfile)
+  call ChunkLast()
+  call ChunkFirst()
+
+  AssertBufferMatch << trim EOF
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+  10
+  11
+  12
+  13
+  14
+  15
+  EOF
+endfunction
+
 function s:Test_loads_chunk_with_line_number()
   let g:chunkSize="5"
   let tmpfile = tempname()

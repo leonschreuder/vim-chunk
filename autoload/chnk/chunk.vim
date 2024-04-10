@@ -30,7 +30,7 @@ fu! chnk#chunk#loadNextChunk(model)
   let newModel.lastChunk = { 'start': newModel.middleChunk.end + 1 }
   let newModel.lastChunk.end = newModel.lastChunk.start + (g:chunkSize - 1)
   if newModel.lastChunk.end > g:chunkFileLines
-    return chnk#chunk#initChunkGroups(g:chunkFileLines - g:chunkSize * 2 + 1)
+    return chnk#chunk#loadLastChunk(a:model)
   else
     let newModel.displayedLines = { 'start':newModel.firstChunk.start, 'end':newModel.lastChunk.end }
     return newModel
@@ -45,7 +45,7 @@ fu! chnk#chunk#loadPreviousChunk(model)
 
   let newModel.firstChunk = { 'start': a:model.firstChunk.start - g:chunkSize }
   if newModel.firstChunk.start < 1
-    return chnk#chunk#initChunkGroups()
+    return chnk#chunk#loadFirstChunk(a:model)
   else
     let newModel.firstChunk.end = newModel.firstChunk.start + (g:chunkSize - 1)
     let newModel.middleChunk = a:model.firstChunk
@@ -55,3 +55,10 @@ fu! chnk#chunk#loadPreviousChunk(model)
   endif
 endfu
 
+fu! chnk#chunk#loadLastChunk(model)
+  return chnk#chunk#initChunkGroups(g:chunkFileLines - g:chunkSize * 2 + 1)
+endfu
+
+fu! chnk#chunk#loadFirstChunk(model)
+  return chnk#chunk#initChunkGroups() " simply create a new set of groups
+endfu

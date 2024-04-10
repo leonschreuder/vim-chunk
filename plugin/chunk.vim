@@ -24,12 +24,12 @@ endfu
 " loads 3 chunks with the specified line number in the middle chunk
 command! -nargs=+ ChunkTo call ChunkTo(<f-args>)
 fu! ChunkTo(...)
-
   if exists("a:2")
     call chnk#file#load(a:2)
   endif
   if !exists("g:chunkFile")
     echoerr "Error: Please provide a chunk-file"
+    return
   endif
   call chnk#buffer#activateOrOpen()
 
@@ -45,6 +45,7 @@ endfu
 
 command! ChunkNext call ChunkNext()
 fu! ChunkNext()
+  call chnk#buffer#activateOrOpen()
   let g:chunkModel = chnk#chunk#loadNextChunk(g:chunkModel)
 
   call chunk#log("loading next chunk " . g:chunkModel.lastChunk.start . "-" . g:chunkModel.lastChunk.end . " (" . g:chunkModel.displayedLines.start . "-" . g:chunkModel.displayedLines.end . ")")
@@ -53,8 +54,33 @@ fu! ChunkNext()
   call chnk#file#loadLinesToBufferEnd(g:chunkModel.lastChunk.start, g:chunkModel.lastChunk.end)
 endfu
 
+command! ChunkLast call ChunkLast()
+fu! ChunkLast()
+  call chnk#buffer#activateOrOpen()
+  let g:chunkModel = chnk#chunk#loadLastChunk(g:chunkModel)
+
+  call chunk#log("loading last 3 chunks from ". g:chunkFile .": " . g:chunkModel.displayedLines.start . "-" . g:chunkModel.displayedLines.end . " (of total " . g:chunkFileLines . " lines)")
+
+  call chnk#buffer#clear()
+  call chnk#file#loadLinesToBufferEnd(g:chunkModel.displayedLines.start, g:chunkModel.displayedLines.end)
+  call chnk#buffer#removeDefaultFirstLine()
+endfu
+
+command! ChunkFirst call ChunkFirst()
+fu! ChunkFirst()
+  call chnk#buffer#activateOrOpen()
+  let g:chunkModel = chnk#chunk#loadFirstChunk(g:chunkModel)
+
+  call chunk#log("loading first 3 chunks from ". g:chunkFile .": " . g:chunkModel.displayedLines.start . "-" . g:chunkModel.displayedLines.end . " (of total " . g:chunkFileLines . " lines)")
+
+  call chnk#buffer#clear()
+  call chnk#file#loadLinesToBufferEnd(g:chunkModel.displayedLines.start, g:chunkModel.displayedLines.end)
+  call chnk#buffer#removeDefaultFirstLine()
+endfu
+
 command! ChunkPrevious call ChunkPrevious()
 fu! ChunkPrevious()
+  call chnk#buffer#activateOrOpen()
   let g:chunkModel = chnk#chunk#loadPreviousChunk(g:chunkModel)
 
   call chunk#log("loading prev chunk " . g:chunkModel.firstChunk.start . "-" . g:chunkModel.firstChunk.end . " (" . g:chunkModel.displayedLines.start . "-" . g:chunkModel.displayedLines.end . ")")
