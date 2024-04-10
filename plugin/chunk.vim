@@ -15,8 +15,9 @@ fu! Chunk(...)
   call chnk#buffer#activateOrOpen()
   let g:chunkModel = chnk#chunk#initChunkGroups()
 
-  call chunk#log("loading initial 3 chunks: " . g:chunkModel.displayedLines.start . "-" . g:chunkModel.displayedLines.end . " (of total " . g:chunkFileLines . " lines)")
+  call chunk#logChunkUpdate("Loading first 3 chunks.", g:chunkModel)
 
+  call chnk#buffer#clear()
   call chnk#file#loadLinesToBufferEnd(g:chunkModel.displayedLines.start, g:chunkModel.displayedLines.end)
   call chnk#buffer#removeDefaultFirstLine()
 endfu
@@ -35,7 +36,7 @@ fu! ChunkTo(...)
 
   let g:chunkModel = chnk#chunk#initChunkGroups(a:1)
 
-  call chunk#log("loading 3 chunks from ". g:chunkFile .": " . g:chunkModel.displayedLines.start . "-" . g:chunkModel.displayedLines.end . " (of total " . g:chunkFileLines . " lines)")
+  call chunk#logChunkUpdate("Loading 3 chunks centered around line " . a:1 . ".", g:chunkModel)
 
   call chnk#buffer#clear()
   call chnk#file#loadLinesToBufferEnd(g:chunkModel.displayedLines.start, g:chunkModel.displayedLines.end)
@@ -48,7 +49,7 @@ fu! ChunkNext()
   call chnk#buffer#activateOrOpen()
   let g:chunkModel = chnk#chunk#loadNextChunk(g:chunkModel)
 
-  call chunk#log("loading next chunk " . g:chunkModel.lastChunk.start . "-" . g:chunkModel.lastChunk.end . " (" . g:chunkModel.displayedLines.start . "-" . g:chunkModel.displayedLines.end . ")")
+  call chunk#logChunkUpdate("Loading next chunk.", g:chunkModel)
 
   call chnk#buffer#removeFirstChunk()
   call chnk#file#loadLinesToBufferEnd(g:chunkModel.lastChunk.start, g:chunkModel.lastChunk.end)
@@ -59,7 +60,7 @@ fu! ChunkLast()
   call chnk#buffer#activateOrOpen()
   let g:chunkModel = chnk#chunk#loadLastChunk(g:chunkModel)
 
-  call chunk#log("loading last 3 chunks from ". g:chunkFile .": " . g:chunkModel.displayedLines.start . "-" . g:chunkModel.displayedLines.end . " (of total " . g:chunkFileLines . " lines)")
+  call chunk#logChunkUpdate("Loading last 3 chunks.", g:chunkModel)
 
   call chnk#buffer#clear()
   call chnk#file#loadLinesToBufferEnd(g:chunkModel.displayedLines.start, g:chunkModel.displayedLines.end)
@@ -71,7 +72,7 @@ fu! ChunkFirst()
   call chnk#buffer#activateOrOpen()
   let g:chunkModel = chnk#chunk#loadFirstChunk(g:chunkModel)
 
-  call chunk#log("loading first 3 chunks from ". g:chunkFile .": " . g:chunkModel.displayedLines.start . "-" . g:chunkModel.displayedLines.end . " (of total " . g:chunkFileLines . " lines)")
+  call chunk#logChunkUpdate("Loading first 3 chunks.", g:chunkModel)
 
   call chnk#buffer#clear()
   call chnk#file#loadLinesToBufferEnd(g:chunkModel.displayedLines.start, g:chunkModel.displayedLines.end)
@@ -83,7 +84,7 @@ fu! ChunkPrevious()
   call chnk#buffer#activateOrOpen()
   let g:chunkModel = chnk#chunk#loadPreviousChunk(g:chunkModel)
 
-  call chunk#log("loading prev chunk " . g:chunkModel.firstChunk.start . "-" . g:chunkModel.firstChunk.end . " (" . g:chunkModel.displayedLines.start . "-" . g:chunkModel.displayedLines.end . ")")
+  call chunk#logChunkUpdate("Loading previous chunk.", g:chunkModel)
 
   call chnk#buffer#removeLastChunk()
   call chnk#file#loadLinesToBufferStart(g:chunkModel.firstChunk.start, g:chunkModel.firstChunk.end)
@@ -104,7 +105,11 @@ endfu
 " A chunk refers to a a part of the (large) file we are reading parts of
 " A hunk refers to the portion of the visible lines in the buffer
 
-fu chunk#log(...)
+fu! chunk#logChunkUpdate(msg, model)
+  call chunk#log(a:msg, "Line " . a:model.displayedLines.start . "-" . a:model.displayedLines.end . " of " . g:chunkFileLines . " in " . g:chunkFile . ")")
+endfu
+
+fu! chunk#log(...)
   if !exists("g:chunkQuiet")
     echom join(a:000)
   endif
