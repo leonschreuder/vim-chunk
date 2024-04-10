@@ -23,7 +23,7 @@ fu! chnk#buffer#removeDefaultFirstLine()
 endfu
 
 fu! chnk#buffer#clear()
-  :1,$d " delete all lines in buffer
+  silent %d_ " delete all lines in buffer
 endfu
 
 
