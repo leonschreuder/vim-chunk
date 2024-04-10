@@ -49,6 +49,7 @@ fu! ChunkTo(...)
   " add new lines at the end of the file
   call append(line('$'), readLines)
   call deletebufline(bufname(), 1) " because of the new buffer, the first line is empty, delete it
+  call cursor(g:chunkSize, 1)
 endfu
 
 command! ChunkNext call ChunkNext()
