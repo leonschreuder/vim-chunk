@@ -13,12 +13,11 @@ command! -nargs=1 Chunk call Chunk(<q-args>)
 fu! Chunk(...)
   call chnk#file#load(a:1)
   call chnk#buffer#activateOrOpen()
+  let g:chunkModel = chnk#chunk#initChunkGroups()
 
-  let g:chunksVisible = chnk#chunk#threeChunks()
+  call chunk#log("loading initial 3 chunks: " . g:chunkModel.displayedLines.start . "-" . g:chunkModel.displayedLines.end . " (of total " . g:chunkFileLines . " lines)")
 
-  call chunk#log("loading initial 3 chunks: " . g:chunksVisible.start . "-" . g:chunksVisible.end . " (of total " . g:chunkFileLines . " lines)")
-
-  call chnk#file#loadLinesToBufferEnd(g:chunksVisible.start, g:chunksVisible.end)
+  call chnk#file#loadLinesToBufferEnd(g:chunkModel.displayedLines.start, g:chunkModel.displayedLines.end)
   call chnk#buffer#removeDefaultFirstLine()
 endfu
 
@@ -34,54 +33,34 @@ fu! ChunkTo(...)
   endif
   call chnk#buffer#activateOrOpen()
 
-  let g:chunksVisible = chnk#chunk#threeChunks(a:1)
+  let g:chunkModel = chnk#chunk#initChunkGroups(a:1)
 
-  call chunk#log("loading 3 chunks from ". g:chunkFile .": " . g:chunksVisible.start . "-" . g:chunksVisible.end . " (of total " . g:chunkFileLines . " lines)")
+  call chunk#log("loading 3 chunks from ". g:chunkFile .": " . g:chunkModel.displayedLines.start . "-" . g:chunkModel.displayedLines.end . " (of total " . g:chunkFileLines . " lines)")
 
-  " read specified line range using sed
   call chnk#buffer#clear()
-  call chnk#file#loadLinesToBufferEnd(g:chunksVisible.start, g:chunksVisible.end)
+  call chnk#file#loadLinesToBufferEnd(g:chunkModel.displayedLines.start, g:chunkModel.displayedLines.end)
   call chnk#buffer#removeDefaultFirstLine()
   call cursor(g:chunkSize, 1)
 endfu
 
 command! ChunkNext call ChunkNext()
 fu! ChunkNext()
-  if g:chunksVisible.end >= g:chunkFileLines
-    echom "Already at end of file."
-    return
-  endif
+  let g:chunkModel = chnk#chunk#loadNextChunk(g:chunkModel)
 
-  let nextChunk = chnk#chunk#after(g:chunksVisible.end)
+  call chunk#log("loading next chunk " . g:chunkModel.lastChunk.start . "-" . g:chunkModel.lastChunk.end . " (" . g:chunkModel.displayedLines.start . "-" . g:chunkModel.displayedLines.end . ")")
 
-  let g:chunksVisible.start=g:chunksVisible.start + g:chunkSize
-  let g:chunksVisible.end=nextChunk.end
-
-  call chunk#log("loading next chunk " . nextChunk.start . "-" . nextChunk.end . " (" . g:chunksVisible.start . "-" . g:chunksVisible.end . ")")
-
-  call chnk#buffer#removeLastChunk()
-  call chnk#file#loadLinesToBufferEnd(nextChunk.start, nextChunk.end)
+  call chnk#buffer#removeFirstChunk()
+  call chnk#file#loadLinesToBufferEnd(g:chunkModel.lastChunk.start, g:chunkModel.lastChunk.end)
 endfu
 
 command! ChunkPrevious call ChunkPrevious()
 fu! ChunkPrevious()
-  if g:chunksVisible.start <= 1
-    echom "Already at start of file."
-    return
-  endif
+  let g:chunkModel = chnk#chunk#loadPreviousChunk(g:chunkModel)
 
-  let prevChunk = chnk#chunk#before(g:chunksVisible.start)
+  call chunk#log("loading prev chunk " . g:chunkModel.firstChunk.start . "-" . g:chunkModel.firstChunk.end . " (" . g:chunkModel.displayedLines.start . "-" . g:chunkModel.displayedLines.end . ")")
 
-  " let g:chunksModel.firstChunk = #{startLine: 1, lastLine: 10}
-  
-
-  let g:chunksVisible.start=prevChunk.start
-  let g:chunksVisible.end=g:chunksVisible.end - g:chunkSize
-
-  call chunk#log("loading prev chunk " . prevChunk.start . "-" . prevChunk.end . " (" . g:chunksVisible.start . "-" . g:chunksVisible.end . ")")
-
-  call chnk#buffer#removeFirstChunk()
-  call chnk#file#loadLinesToBufferStart(prevChunk.start, prevChunk.end)
+  call chnk#buffer#removeLastChunk()
+  call chnk#file#loadLinesToBufferStart(g:chunkModel.firstChunk.start, g:chunkModel.firstChunk.end)
 endfu
 
 " can be called when in the quickfix window to open the line under the cursor

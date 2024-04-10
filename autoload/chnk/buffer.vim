@@ -27,12 +27,12 @@ fu! chnk#buffer#clear()
 endfu
 
 
-fu! chnk#buffer#removeFirstChunk()
+fu! chnk#buffer#removeLastChunk()
   let removeLinesEnd=line('$') " from end of file
   let removeLinesStart=removeLinesEnd - g:chunkSize + 1
   call deletebufline(bufname(), removeLinesStart, removeLinesEnd)
 endfu
 
-fu! chnk#buffer#removeLastChunk()
+fu! chnk#buffer#removeFirstChunk()
   call deletebufline(bufname(), 1, g:chunkSize)
 endfu
