@@ -11,7 +11,13 @@ endfunction
 
 function s:Teardown()
   :b# " switch back to previous buffer
-  :bdelete! current-chunk " delete custom buffer
+
+  " delete all chunk buffers
+  for item in getbufinfo()
+    if match(item.name, "[chunk tab") >= 0
+      eval "bdelete! " . item.name
+    endif
+  endfor
 endfunction
 
 function s:Test_loads_chunks()
