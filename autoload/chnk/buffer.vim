@@ -1,8 +1,14 @@
 
 fu! chnk#buffer#edit(file)
   exec 'e ' . a:file
-  set readonly
-  set nomodifiable
+  " copy the content of the chunkfile to the original file
+  autocmd! BufWritePost <buffer> call chnk#buffer#BufWritePostAction()
+endfu
+
+" Function called by the BufWritePost action.
+" In a separate function as tests don't work on autocmds
+fu! chnk#buffer#BufWritePostAction()
+  call chnk#file#updateLinesFromFile(g:chunkFile, g:chunkTmpFile, g:chunkModel.displayedLines.start, g:chunkModel.displayedLines.end)
 endfu
 
 " opens a special chunk buffer. Creates it if it doesn't exist yet.

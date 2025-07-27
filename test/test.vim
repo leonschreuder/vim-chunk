@@ -233,3 +233,36 @@ function s:Test_loads_chunk_with_line_number_when_in_first_chunk()
   16
   EOF
 endfunction
+
+
+function s:Test_saves_modified_chunk_in_source()
+  " given a file with numbers from 1-100
+  let g:chunkSize="4"
+  let tmpfile = tempname()
+  call system('seq 1 12 > ' . tmpfile)
+  call Chunk(tmpfile)
+  " and the file is modified
+  normal 9GCA
+  AssertBufferMatches << trim EOF
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  A
+  10
+  11
+  12
+  EOF
+
+  " when written
+  write
+  " BufWritePost is not called, so we call it manually
+  call chnk#buffer#BufWritePostAction()
+
+  " then
+  AssertEquals(['1', '2', '3', '4', '5', '6', '7', '8', 'A', '10', '11', '12'], readfile(tmpfile))
+endfunction

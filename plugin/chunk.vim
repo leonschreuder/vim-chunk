@@ -7,7 +7,8 @@ if exists("g:loaded_chunk")
 endif
 let g:loaded_chunk = 1
 
-let g:chunkSize="5000" " 3 chunks are displayed at any time
+" Number of lines per chunk. Remember that 3 chunks are displayed at any time
+let g:chunkSize="5000"
 
 command! -nargs=1 Chunk call Chunk(<q-args>)
 fu! Chunk(...)
